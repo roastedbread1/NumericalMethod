@@ -46,7 +46,7 @@ int main() {
     int h = 1;
     
 
-    cout << "forward difference of f(20.5) "<< endl;
+    cout << "forward difference of f(19.5) "<< endl;
 
     double forward = arr[18] + 0.5 * firstDerivative(arr, 18, h, 1);
 
