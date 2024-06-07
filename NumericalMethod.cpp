@@ -1,24 +1,10 @@
 #include <iostream>
 #include <cmath>
-
+#include <vector>
 using namespace std;
 
-float ft(const float* arr, int i, float h) {
-    return (arr[i + 1] - arr[i - 1]) / (2 * h);
-}
 
-float f(const float* arr, int i, float ft_val) {
-    return arr[i] + ft_val;
-}
-
-float forward(const float* arr, int i, float h) {
-    return (arr[i+1] - arr[i]) / h;
-}
-float backward(const float* arr, int i, float h) {
-    return (arr[i] - arr[i-1]) / h;
-}
-
-float linear(const float* arr, int size, float x) {
+float linear(const double* arr, int size, int x) {
     float m, c, sum_x = 0, sum_y = 0, sum_xy = 0, sum_x2 = 0;
     for (int i = 0; i < size; i++) {
         sum_x += i;
@@ -31,66 +17,68 @@ float linear(const float* arr, int size, float x) {
     c = (sum_y - m * sum_x) / size;
     return m * x + c;
 }
+double firstDerivative(const double* arr, int i, int h, int type) {
+    switch (type) {
+    case 1:
+        return (arr[i + h] - arr[i]) / h;
+    case 2:
+        return (arr[i] - arr[i - h]) / h;
+    case 3:
+        return (arr[i + h] - arr[i - h]) / (2 * h);
+    default:
+        return 0.0;
+    }
+}
+
+double error(const double* forecast, const double* real, int n) {
+    double sumSquaredError = 0.0;
+    for (int i = 0; i < n; ++i) {
+        sumSquaredError += pow(forecast[i] - real[i], 2);
+    }
+    return sqrt(sumSquaredError / n);
+}
 
 int main() {
-    float arr[20] = {
-        53.9, 54.0, 54.5, 53.1, 53.5,
-        53.7, 54.7, 54.4, 54.8, 53.2,
-        52.3, 53.5, 51.1, 53.4, 54.4,
-        53.1, 53.3, 55.0, 54.2, 54.7
-    };
-    //53.9, 54.8, 53.5, 54.0
+    //1 - 20
+    double arr[20] = { 53.9, 54.0, 54.5, 53.1, 53.5, 53.7, 54.7, 54.4, 54.8, 53.2, 52.3, 53.5, 51.1, 53.4, 54.4, 53.1, 53.3, 55.0, 54.2, 54.7 };
+    //20-24
+    double real[4] = { 53.9, 54.8, 53.5, 54.0 };
+    int h = 1;
+    
 
-    int size = sizeof(arr) / sizeof(arr[0]);
-    cout << "Day | Value" << endl;
-    for (int i = 0; i < size; i++) {
-        cout << (i < 9 ? " " : "") << i + 1 << " | " << arr[i] << endl;
+    cout << "forward difference of f(20.5) "<< endl;
+
+    double forward = arr[18] + 0.5 * firstDerivative(arr, 18, h, 1);
+
+    cout << forward<< endl;
+
+    cout << "backwards difference of f(21) "<< endl;
+
+    double backward = arr[19] - 1 * firstDerivative(arr, 19, h, 2);
+    cout << backward << endl;
+    cout << "central difference of f(2.5) " << endl;
+    double central = arr[1] + 0.5 * firstDerivative(arr, 1, h, 3);
+    cout << central << endl;
+
+    int size = 20;
+    
+    double linear_forecast[4];
+    for (int i = 0; i < 4; ++i) {
+        linear_forecast[i] = linear(arr, 20, 18 + i);
     }
 
-    cout << "1. Finite Difference \n2. Linear Regression: ";
-    int method;
-    cin >> method;
-    float d;
-    float h;
-
-    if (method == 1) {
-        cout << "1. Central Difference\n2.Forward Difference\n3.Backward Difference" << endl;
-        cout << "Enter a difference method: ";
-        int diff;
-        cin >> diff;
-        
-        if (diff == 1) {
-            cout << "Enter a day - 1 value to predict : ";
-            cin >> d;
-            cout << "Enter h: ";
-            cin >> h;
-            cout << f(arr, d, ft(arr, d, h)) << endl;
-        }
-        else if (diff == 2) {
-            cout << "Enter a day - 1 value to predict : ";
-            cin >> d;
-            cout << "Enter h: ";
-            cin >> h;
-            cout << f(arr, d, forward(arr, d, h)) << endl;
-
-        }
-        else if (diff == 3) {
-            cout << "Enter a day - 1 value to predict : ";
-            cin >> d;
-            cout << "Enter h: ";
-            cin >> h;
-            cout << f(arr, d, backward(arr, d, h)) << endl;
-        }
-    }
-    else if (method == 2) {
-        cout << "Enter the value of x to predict y: ";
-        float x;
-        cin >> x;
-        cout << "Predicted value of y: " << linear(arr, size, x) << endl;
-    }
-    else {
-        cout << "Invalid method" << endl;
+    cout << "Linear Regression Forecasted Values:" << endl;
+    for (int i = 0; i < 4; ++i) {
+        cout << "Day " << (21 + i) << ": " << linear_forecast[i] << endl;
     }
 
+
+    cout << "\nReal Values:" << endl;
+    for (int i = 0; i < 4; ++i) {
+        cout << "Day " << (21 + i) << ": " << real[i] << endl;
+    }
+
+    double errLinear = error(linear_forecast, real, 4);
+    cout << "\Error for Linear Regression Forecast: " << errLinear << endl;
     return 0;
 }
